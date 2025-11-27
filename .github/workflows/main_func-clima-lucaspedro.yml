@@ -3,10 +3,11 @@ name: Build and deploy Python app to Azure Function App - func-clima-lucaspedro
 on:
   push:
     branches:
-      - principal
+      - main
 
 env:
   AZURE_FUNCTIONAPP_NAME: "func-clima-lucaspedro"
+  # raiz do seu projeto de Functions (onde está o host.json)
   AZURE_FUNCTIONAPP_PACKAGE_PATH: "."
   PYTHON_VERSION: "3.10"
 
@@ -15,31 +16,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Baixar o código do repositório
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Configurar Python
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # 3. Instalar dependências
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Compactar o projeto em um zip
+      # Cria o ZIP do app (host.json na raiz, pasta WeatherFunction etc)
       - name: Archive project
         run: |
           zip -r release.zip .
 
-      # 5. Fazer deploy na Azure Function App usando o Publish Profile
-      - name: Deploy to Azure Function App
-        uses: Azure/functions-action@v1
+      - name: Deploy to Azure Function App using publish profile
+        uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: release.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FUNC_CLIMA_LUCASPEDRO }}
+          package: release.zip
